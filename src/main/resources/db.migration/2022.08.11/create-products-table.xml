@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="2022-08-11-15-44" author="Turaev Denis">
+        <createTable tableName="products">
+
+            <column name="id" type="bigserial">
+                <constraints primaryKey="true"/>
+            </column>
+
+            <column name="name" type="character varying">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="character varying"/>
+
+            <column name="price" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="producing_country" type="character varying">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="weight" type="double"/>
+
+            <column name="material" type="character varying"/>
+
+            <column name="is_produced" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
