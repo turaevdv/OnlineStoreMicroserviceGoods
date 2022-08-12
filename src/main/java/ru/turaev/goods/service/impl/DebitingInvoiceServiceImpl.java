@@ -1,9 +1,12 @@
 package ru.turaev.goods.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.turaev.goods.dto.DebitingInvoiceDTO;
+import ru.turaev.goods.exception.DebitingInvoiceNotFoundException;
+import ru.turaev.goods.exception.IncorrectDebitingInvoiceException;
 import ru.turaev.goods.model.*;
 import ru.turaev.goods.repository.DebitingInvoiceRepository;
 import ru.turaev.goods.service.AccountingService;
@@ -13,6 +16,7 @@ import ru.turaev.goods.service.ProductService;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
@@ -22,15 +26,18 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
 
     @Override
     public DebitingInvoice findById(long id) {
-        return debitingInvoiceRepository.findByIdAndIsDeletedIsFalse(id)
-                .orElseThrow(() -> new RuntimeException("Запроса на списание с id = " + id + " не существует"));
+        log.info("Trying to find debiting invoice with id = {}", id);
+        DebitingInvoice debitingInvoice = debitingInvoiceRepository.findByIdAndIsDeletedIsFalse(id)
+                .orElseThrow(() -> new DebitingInvoiceNotFoundException("Debiting invoice with id = " + id + " was not found"));
+        log.info("The debiting invoice with id = {} was found", id);
+        return debitingInvoice;
     }
 
     @Override
     public DebitingInvoice findUnconfirmedInvoiceById(long id) {
         DebitingInvoice debitingInvoice = findById(id);
         if (debitingInvoice.isConfirmed()) {
-            throw new RuntimeException("Запрос на списание с id = " + id + " уже подтвержден");
+            throw new IncorrectDebitingInvoiceException("The debiting invoice with id = " + id + " has already been confirmed");
         }
         return debitingInvoice;
     }
@@ -39,6 +46,7 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     @Override
     public DebitingInvoice add(DebitingInvoiceDTO debitingInvoiceDTO) {
         //TODO: Проверка на существование склада
+        log.info("Trying to add a new debiting invoice");
         DebitingInvoice debitingInvoice = new DebitingInvoice();
         debitingInvoice.setStorehouseId(debitingInvoiceDTO.getStorehouseId());
 
@@ -58,10 +66,12 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
         debitingInvoice.setDeleted(false);
 
         if (!isDebitingInvoiceCorrect(debitingInvoice)) {
-            //throw new IllegalInvoiceException("Ошибка в количестве товара", HttpStatus.BAD_REQUEST);
-            throw new RuntimeException("Запрос на списание с id = " + debitingInvoice.getId() + " некорректен. Возможно, произошла попытка списания большего количества товаров, чем есть на складе");
+            throw new IncorrectDebitingInvoiceException("This debiting invoice is incorrect. Check the quantity of products");
         }
-        return debitingInvoiceRepository.save(debitingInvoice);
+
+        debitingInvoiceRepository.save(debitingInvoice);
+        log.info("The debiting invoice with id = {} was added", debitingInvoice.getId());
+        return debitingInvoice;
     }
 
     @Override
@@ -72,8 +82,10 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     @Transactional
     @Override
     public DebitingInvoice confirmInvoice(long id) {
+        log.info("Trying to confirm the debiting invoice with id = {}", id);
         DebitingInvoice debitingInvoice = findUnconfirmedInvoiceById(id);
         saveConfirmedInvoice(debitingInvoice);
+        log.info("The debiting invoice with id = {} has been confirmed", debitingInvoice.getId());
         return debitingInvoice;
     }
 
@@ -82,8 +94,7 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     public List<DebitingInvoice> confirmAllInvoices() {
         List<DebitingInvoice> unconfirmedList = getAllUnconfirmedInvoices();
         if (unconfirmedList.isEmpty()) {
-            //throw new IllegalInvoiceException("Накладных для списания нет", HttpStatus.BAD_REQUEST);
-            throw new RuntimeException("Накладных для списания нет");
+            throw new DebitingInvoiceNotFoundException("There are no unconfirmed debiting invoices");
         }
 
         return unconfirmedList.stream()
@@ -94,17 +105,18 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     @Transactional
     @Override
     public DebitingInvoice deleteInvoice(long id) {
+        log.info("Trying to delete the debiting invoice with id = {}", id);
         DebitingInvoice debitingInvoice = findUnconfirmedInvoiceById(id);
         debitingInvoice.setConfirmed(false);
         debitingInvoice.setDeleted(true);
+        log.info("The debiting invoice with id = {} has been deleted", id);
         return debitingInvoice;
     }
 
     @Transactional
     public void saveConfirmedInvoice(DebitingInvoice debitingInvoice) {
         if (!isDebitingInvoiceCorrect(debitingInvoice)) {
-            throw new RuntimeException("Запрос на списание с id = " + debitingInvoice.getId() + " некорректен. Возможно, произошла попытка списания большего количества товаров, чем есть на складе");
-            //throw new IllegalInvoiceException("Некорретная накладная. Ошибка в количестве товара", HttpStatus.BAD_REQUEST);
+            throw new IncorrectDebitingInvoiceException("This adding invoice is incorrect. Check the quantity of products");
         }
         for (GoodsAndQuantity goodsAndQuantity : debitingInvoice.getGoodsAndQuantities()) {
             Accounting accounting =
