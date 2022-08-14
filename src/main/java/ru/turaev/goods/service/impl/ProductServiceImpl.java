@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.turaev.goods.exception.IncorrectProductException;
 import ru.turaev.goods.exception.ProductNotFoundException;
 import ru.turaev.goods.model.Product;
 import ru.turaev.goods.repository.ProductRepository;
@@ -50,6 +51,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product deleteProduct(long id) {
         Product product = findById(id);
+        if(!product.isProduced()) {
+            throw new IncorrectProductException("Product with id = " + id + " has already been deleted");
+        }
         product.setProduced(false);
         log.info("The product with id = {} has been deleted", id);
         return product;

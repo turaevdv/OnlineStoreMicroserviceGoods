@@ -12,7 +12,7 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ExceptionApiHandler {
-    @ExceptionHandler({AccountingNotFoundException.class, DebitingInvoiceNotFoundException.class,
+    @ExceptionHandler({AccountingNotFoundException.class, DebitingInvoiceNotFoundException.class, IncorrectProductException.class,
             IncorrectDebitingInvoiceException.class, ProductNotFoundException.class, StorehouseNotFoundException.class})
     public ResponseEntity<?> handleNotFoundException(BaseException ex) {
         log.warn("An error has occurred. Error message - {}", ex.getMessage());

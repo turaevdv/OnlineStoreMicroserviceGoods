@@ -45,7 +45,6 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     @Transactional
     @Override
     public DebitingInvoice add(DebitingInvoiceDTO debitingInvoiceDTO) {
-        //TODO: Проверка на существование склада
         log.info("Trying to add a new debiting invoice");
         DebitingInvoice debitingInvoice = new DebitingInvoice();
         debitingInvoice.setStorehouseId(debitingInvoiceDTO.getStorehouseId());

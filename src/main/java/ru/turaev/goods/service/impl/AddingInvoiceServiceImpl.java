@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.turaev.goods.exception.StorehouseNotFoundException;
 import ru.turaev.goods.model.*;
 import ru.turaev.goods.repository.AddingInvoiceRepository;
+import ru.turaev.goods.restconsumer.StorehouseRestConsumer;
 import ru.turaev.goods.service.AccountingService;
 import ru.turaev.goods.service.AddingInvoiceService;
 import ru.turaev.goods.service.ProductService;
@@ -17,11 +19,17 @@ public class AddingInvoiceServiceImpl implements AddingInvoiceService {
     private final AddingInvoiceRepository addingInvoiceRepository;
     private final AccountingService accountingService;
     private final ProductService productService;
+    private final StorehouseRestConsumer storehouseRestConsumer;
 
     @Transactional
     @Override
     public AddingInvoice save(AddingInvoice addingInvoice) {
         log.info("Trying to save an adding invoice");
+
+        if(!storehouseRestConsumer.isStorehouseExist(addingInvoice.getStorehouseId())) {
+            throw new StorehouseNotFoundException("Storehouse with id = " + addingInvoice.getStorehouseId() + " doesn't exist");
+        }
+
         for (GoodsAndQuantity goodsAndQuantity : addingInvoice.getGoodsAndQuantities()) {
             Product product = goodsAndQuantity.getProduct();
             try {
