@@ -13,7 +13,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class ExceptionApiHandler {
     @ExceptionHandler({AccountingNotFoundException.class, DebitingInvoiceNotFoundException.class, IncorrectProductException.class,
-            IncorrectDebitingInvoiceException.class, ProductNotFoundException.class, StorehouseNotFoundException.class})
+            IncorrectDebitingInvoiceException.class, ProductNotFoundException.class, StorehouseNotFoundException.class, IncorrectOrderException.class})
     public ResponseEntity<?> handleNotFoundException(BaseException ex) {
         log.warn("An error has occurred. Error message - {}", ex.getMessage());
         Map<String, Object> responseMap = new HashMap<>();

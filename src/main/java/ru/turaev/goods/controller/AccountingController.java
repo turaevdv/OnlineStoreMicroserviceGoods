@@ -1,10 +1,8 @@
 package ru.turaev.goods.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.turaev.goods.dto.AccountingAndQuantityDto;
 import ru.turaev.goods.model.Accounting;
 import ru.turaev.goods.service.AccountingService;
 
@@ -35,5 +33,15 @@ public class AccountingController {
     @GetMapping
     public List<Accounting> findAllAccounting() {
         return accountingService.findAllAccounting();
+    }
+
+    @PostMapping("/booking-goods")
+    public int bookingGoods(@RequestBody List<AccountingAndQuantityDto> accountingAndQuantityDtos) {
+        return accountingService.bookingGoods(accountingAndQuantityDtos);
+    }
+
+    @PostMapping("/return-goods")
+    public void returnGoods(@RequestBody List<AccountingAndQuantityDto> accountingAndQuantityDtos) {
+        accountingService.returnGoods(accountingAndQuantityDtos);
     }
 }
