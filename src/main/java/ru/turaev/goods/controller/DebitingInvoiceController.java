@@ -1,11 +1,13 @@
 package ru.turaev.goods.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import ru.turaev.goods.dto.DebitingInvoiceDTO;
+import ru.turaev.goods.dto.DebitingInvoiceDto;
 import ru.turaev.goods.model.DebitingInvoice;
 import ru.turaev.goods.service.DebitingInvoiceService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -30,7 +32,7 @@ public class DebitingInvoiceController {
     }
 
     @PostMapping
-    public DebitingInvoice addDebitingInvoice(@RequestBody DebitingInvoiceDTO debitingInvoiceDTO) {
+    public DebitingInvoice addDebitingInvoice(@RequestBody DebitingInvoiceDto debitingInvoiceDTO) {
         return debitingInvoiceService.add(debitingInvoiceDTO);
     }
 
@@ -47,5 +49,12 @@ public class DebitingInvoiceController {
     @DeleteMapping("/{id}")
     public DebitingInvoice deleteDebitingInvoice(@PathVariable long id) {
         return debitingInvoiceService.deleteInvoice(id);
+    }
+
+    @GetMapping("/pickup-point/{id}/debiting-invoices-by-period")
+    public List<DebitingInvoiceDto> getDebitingInvoicesByPeriod(@PathVariable long id,
+                                                                @RequestParam("begin") @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate begin,
+                                                                @RequestParam("end") @DateTimeFormat(pattern="yyyy-MM-dd") LocalDate end) {
+        return debitingInvoiceService.getDebitingInvoicesByPeriod(id, begin, end);
     }
 }

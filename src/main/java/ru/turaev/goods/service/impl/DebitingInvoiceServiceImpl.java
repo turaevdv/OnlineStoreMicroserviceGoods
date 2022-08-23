@@ -4,15 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.turaev.goods.dto.DebitingInvoiceDTO;
+import ru.turaev.goods.dto.DebitingInvoiceDto;
 import ru.turaev.goods.exception.DebitingInvoiceNotFoundException;
 import ru.turaev.goods.exception.IncorrectDebitingInvoiceException;
+import ru.turaev.goods.mapper.DebitingInvoiceMapper;
 import ru.turaev.goods.model.*;
 import ru.turaev.goods.repository.DebitingInvoiceRepository;
 import ru.turaev.goods.service.AccountingService;
 import ru.turaev.goods.service.DebitingInvoiceService;
 import ru.turaev.goods.service.ProductService;
 
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,7 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
     private final DebitingInvoiceRepository debitingInvoiceRepository;
     private final ProductService productService;
     private final AccountingService accountingService;
+    private final DebitingInvoiceMapper debitingInvoiceMapper;
 
     @Override
     public DebitingInvoice findById(long id) {
@@ -44,12 +48,12 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
 
     @Transactional
     @Override
-    public DebitingInvoice add(DebitingInvoiceDTO debitingInvoiceDTO) {
+    public DebitingInvoice add(DebitingInvoiceDto debitingInvoiceDTO) {
         log.info("Trying to add a new debiting invoice");
         DebitingInvoice debitingInvoice = new DebitingInvoice();
         debitingInvoice.setStorehouseId(debitingInvoiceDTO.getStorehouseId());
 
-        List<GoodsAndQuantity> goodsAndQuantities = debitingInvoiceDTO.getGoodsAndQuantitiesDTO()
+        List<GoodsAndQuantity> goodsAndQuantities = debitingInvoiceDTO.getGoodsAndQuantities()
                 .stream()
                 .map(goodsAndQuantityDTO -> {
                     GoodsAndQuantity goodsAndQuantity = new GoodsAndQuantity();
@@ -145,5 +149,16 @@ public class DebitingInvoiceServiceImpl implements DebitingInvoiceService {
             }
         }
         return true;
+    }
+
+    @Override
+    public List<DebitingInvoiceDto> getDebitingInvoicesByPeriod(long id, LocalDate begin, LocalDate end) {
+        if (begin.isAfter(end)) {
+            throw new DateTimeException("The beginning of the period is later than the end");
+        }
+        return debitingInvoiceRepository.getAllConfirmedDebitingInvoicesOfStorehouseByPeriod(id, begin, end)
+                .stream()
+                .map(debitingInvoiceMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

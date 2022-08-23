@@ -3,7 +3,7 @@ package ru.turaev.goods.dto;
 import lombok.Data;
 
 @Data
-public class GoodsAndQuantityDTO {
+public class GoodsAndQuantityDto {
     private long productId;
     private int quantity;
 }

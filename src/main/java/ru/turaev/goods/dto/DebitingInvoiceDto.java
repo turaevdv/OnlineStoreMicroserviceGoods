@@ -7,8 +7,8 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Data
-public class DebitingInvoiceDTO {
-    private List<GoodsAndQuantityDTO> goodsAndQuantitiesDTO;
+public class DebitingInvoiceDto {
+    private List<GoodsAndQuantityDto> goodsAndQuantities;
     private long storehouseId;
     private LocalDate invoiceDate;
     private LocalTime invoiceTime;
